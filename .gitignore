@@ -1,0 +1,47 @@
+# Entornos virtuales
+venv/
+.env/
+
+# Archivos de configuración de entorno
+.env
+
+# Archivos de caché
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.cache
+*.log
+
+# Configuración de IDE
+.vscode/
+.idea/
+*.swp
+
+# Archivos de prueba y resultados
+output.csv
+results/
+*.tmp
+
+# Configuración de Git
+.DS_Store
+*.bak
+
+# Archivos de despliegue o dependencias
+node_modules/
+dist/
+build/
+*.egg-info/
+
+# Archivos generados por pytest
+.cache/
+*.pytest_cache/
+.coverage
+htmlcov/
+
+# Otros archivos específicos de tu sistema operativo
+Thumbs.db
+desktop.ini
+
+# Archivos de checkpoints de Jupyter
+.ipynb_checkpoints/
