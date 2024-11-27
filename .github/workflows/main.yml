@@ -12,11 +12,11 @@ jobs:
     steps:
       # Paso 1: Clonar el código del repositorio
       - name: Checkout code
-        uses: actions/checkout@v3  # Actualizamos a v3
+        uses: actions/checkout@v3
 
       # Paso 2: Configurar Python
       - name: Set up Python
-        uses: actions/setup-python@v3  # Actualizamos a v3
+        uses: actions/setup-python@v3
         with:
           python-version: '3.8'
 
@@ -26,22 +26,35 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # Paso 4: Ejecutar el script de scraping
+      # Paso 4: Instalar Brave y su WebDriver
+      - name: Install Brave Browser and Driver
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y apt-transport-https curl
+          sudo curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg] https://brave-browser-apt-release.s3.brave.com/ stable main" | sudo tee /etc/apt/sources.list.d/brave-browser-release.list
+          sudo apt-get update
+          sudo apt-get install -y brave-browser
+          sudo apt-get install -y chromium-chromedriver
+          sudo ln -s /usr/lib/chromium-browser/chromedriver /usr/bin/chromedriver
+
+      # Paso 5: Ejecutar el script de scraping
       - name: Run scraping script
-        run: python PáezRamírez_JeanCarlos_Analizando_EA1.py  # Cambia esto al nombre real de tu script
+        run: python PáezRamírez_JeanCarlos_Analizando_EA1.py
 
-      # Paso 5: Ejecutar pruebas automatizadas con pytest
+      # Paso 6: Ejecutar pruebas automatizadas con pytest
       - name: Run tests
-        run: pytest  # Asegúrate de que tu script tiene pruebas definidas en test_*.py
+        run: |
+          pytest  # Asegúrate de que tu script tenga pruebas definidas en test_*.py
 
-      # Paso 6: Subir el archivo generado como artefacto
+      # Paso 7: Subir el archivo generado como artefacto
       - name: Upload Data as Artifact
-        uses: actions/upload-artifact@v3  # Actualizamos a v3
+        uses: actions/upload-artifact@v3
         with:
           name: scraped-data
-          path: output.csv  # Cambia esto al nombre del archivo que genera tu script
+          path: output.csv
 
-      # Paso 7 (opcional): Hacer commit del archivo generado al repositorio
+      # Paso 8: Hacer commit del archivo generado al repositorio
       - name: Push Results to Repository
         if: success()  # Solo ejecuta este paso si los pasos anteriores se completaron exitosamente
         env:

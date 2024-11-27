@@ -4,16 +4,18 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.chrome import ChromeDriverManager  # Para gestionar el driver automáticamente
 import csv
 
 def scrape_data():
     # Configuración del navegador Brave
     chrome_options = Options()
-    chrome_options.binary_location = "C:/Program Files/BraveSoftware/Brave-Browser/Application/brave.exe"
+    chrome_options.binary_location = "/usr/bin/brave-browser"  # Ruta de Brave en el entorno Linux
+    chrome_options.add_argument("--headless")  # Modo sin interfaz gráfica
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
 
-    # Configuración del WebDriver usando webdriver_manager
-    service = Service(ChromeDriverManager().install())
+    # Configuración del WebDriver
+    service = Service('/usr/bin/chromedriver')  # WebDriver de Brave
     driver = webdriver.Chrome(service=service, options=chrome_options)
 
     # URL del producto
@@ -25,13 +27,13 @@ def scrape_data():
         title_element = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.ID, 'productTitle'))
         )
-        title = title_element.text
+        title = title_element.text.strip()
 
         # Extraer el precio del producto
         price_element = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.CLASS_NAME, 'a-price-whole'))
         )
-        price = price_element.text
+        price = price_element.text.strip()
 
         # Guardar en un archivo CSV
         with open('output.csv', mode='w', newline='', encoding='utf-8') as file:
