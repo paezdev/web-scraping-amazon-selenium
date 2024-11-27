@@ -68,7 +68,9 @@ jobs:
           git config --global user.name 'GitHub Actions'
           git config --global user.email 'actions@github.com'
           git remote set-url origin https://x-access-token:${SCRAPING}@github.com/${{ github.repository }}
-          git add output.csv
+          
+          # Agregar ambos archivos (output.csv y error_screenshot.png)
+          git add output.csv error_screenshot.png
           git commit -m "Datos extraídos automáticamente"
           git push origin main
 
