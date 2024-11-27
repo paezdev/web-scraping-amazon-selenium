@@ -1,6 +1,6 @@
-WEB-SCRAPING-AMAZON
+# WEB-SCRAPING-AMAZON
 
-# Proyecto Web Scraping con Selenium para Amazon
+## Proyecto Web Scraping con Selenium para Amazon
 
 Este proyecto utiliza **Selenium** y **Python** para realizar un scraping de productos desde la plataforma de comercio electrónico **Amazon**. Se extraen datos como el nombre, precio, y otros atributos de los productos listados, y se almacenan en un archivo **CSV**.
 
