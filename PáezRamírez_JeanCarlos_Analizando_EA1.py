@@ -44,15 +44,16 @@ def scrape_data():
         print(f"Título extraído: {title}")
         
         # Extraer el precio del producto
-        price_element = WebDriverWait(driver, 20).until(
-            EC.presence_of_element_located((By.CLASS_NAME, 'a-price-whole'))
-        )
-        price = price_element.text.strip()
-
-        # Asegurarse de que el precio se guarda como string
-        price = str(price)
-
-        print(f"Precio extraído: {price}")
+        try:
+            price_element = WebDriverWait(driver, 20).until(
+                EC.presence_of_element_located((By.CLASS_NAME, 'a-price-whole'))
+            )
+            price = price_element.text.strip()
+            # Asegurarse de que el precio se guarda como string
+            price = str(price)
+            print(f"Precio extraído: {price}")
+        except Exception as e:
+            raise Exception("No se pudo extraer el precio del producto.") from e
 
         # Ruta absoluta para guardar el archivo CSV
         output_file = os.path.join(os.getcwd(), 'output.csv')  # Usamos el directorio actual
@@ -86,4 +87,5 @@ def scrape_data():
 
 if __name__ == "__main__":
     scrape_data()
+
 
