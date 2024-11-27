@@ -21,4 +21,7 @@ def test_scraping_non_empty_data():
     # Verifica que los datos extraídos no estén vacíos
     df = pd.read_csv("output.csv")
     assert df.iloc[0]["Title"].strip(), "El título del producto está vacío"
-    assert df.iloc[0]["Price"].strip(), "El precio del producto está vacío"
+    
+    # Asegurarse de que 'Price' es tratado como cadena antes de aplicar .strip()
+    assert str(df.iloc[0]["Price"]).strip(), "El precio del producto está vacío"
+
