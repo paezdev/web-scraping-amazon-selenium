@@ -24,7 +24,7 @@ def scrape_data():
     driver = webdriver.Chrome(service=service, options=chrome_options)
 
     # URL del producto en Amazon
-    url = 'https://webscraper.io/test-sites/e-commerce/allinone/product/86'
+    url = 'https://www.amazon.com/-/es/Xiaomi-Smart-Band-Global-Version/dp/B0CD2MP728/ref=sr_1_1?sr=8-1'
     driver.get(url)
 
     try:
