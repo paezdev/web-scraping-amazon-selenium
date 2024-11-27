@@ -7,6 +7,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 import csv
 import os
+import time
 
 def scrape_data():
     # Configuración del navegador Brave (si Brave no está disponible, cambiar a Chrome)
@@ -30,12 +31,18 @@ def scrape_data():
     try:
         print("Página cargada. Intentando extraer datos...")
 
-        # Esperar a que el título esté presente en la página
+        # Esperar a que el título esté presente en la página (20 segundos)
         title_element = WebDriverWait(driver, 20).until(
             EC.presence_of_element_located((By.ID, 'productTitle'))
         )
         title = title_element.text.strip()  # Eliminar espacios adicionales
 
+        # Verificar si se extrajo el título
+        if not title:
+            raise Exception("No se pudo extraer el título del producto.")
+        
+        print(f"Título extraído: {title}")
+        
         # Extraer el precio del producto
         price_element = WebDriverWait(driver, 20).until(
             EC.presence_of_element_located((By.CLASS_NAME, 'a-price-whole'))
@@ -44,6 +51,8 @@ def scrape_data():
 
         # Asegurarse de que el precio se guarda como string
         price = str(price)
+
+        print(f"Precio extraído: {price}")
 
         # Ruta absoluta para guardar el archivo CSV
         output_file = os.path.join(os.getcwd(), 'output.csv')  # Usamos el directorio actual
@@ -69,6 +78,7 @@ def scrape_data():
     except Exception as e:
         print(f"Error al extraer datos: {e}")
         driver.save_screenshot('error_screenshot.png')  # Captura de pantalla en caso de error
+        print("Captura de pantalla del error guardada como error_screenshot.png")
 
     finally:
         # Cerrar el navegador
