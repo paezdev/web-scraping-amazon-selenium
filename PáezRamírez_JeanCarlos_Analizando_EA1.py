@@ -42,6 +42,14 @@ def scrape_data():
 
         # Ruta absoluta para guardar el archivo CSV
         output_file = os.path.join(os.getcwd(), 'output.csv')  # Usamos el directorio actual
+        
+        # Verificar si el archivo ya existe, si no, se crea uno nuevo
+        if os.path.exists(output_file):
+            print(f"El archivo {output_file} ya existe. Procediendo con la actualización.")
+        else:
+            print(f"Creando nuevo archivo: {output_file}")
+        
+        # Escribir los datos extraídos en el archivo CSV
         with open(output_file, mode='w', newline='', encoding='utf-8') as file:
             writer = csv.writer(file)
             writer.writerow(['Title', 'Price'])  # Encabezados
@@ -49,7 +57,7 @@ def scrape_data():
 
         # Confirmar que el archivo fue creado
         if os.path.exists(output_file):
-            print(f"El archivo {output_file} fue creado exitosamente.")
+            print(f"El archivo {output_file} fue creado o actualizado exitosamente.")
         else:
             print(f"El archivo {output_file} no se pudo crear.")
 
