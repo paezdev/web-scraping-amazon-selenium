@@ -24,7 +24,7 @@ def scrape_data():
     driver = webdriver.Chrome(service=service, options=chrome_options)
 
     # URL del producto en Amazon
-    url = 'https://www.amazon.com/-/es/actividad-resoluci%C3%B3n-deportivos-frecuencia-inteligente/dp/B0B2DK5YCP'
+    url = 'https://webscraper.io/test-sites/e-commerce/allinone/product/86'
     driver.get(url)
 
     try:
