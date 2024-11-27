@@ -37,6 +37,9 @@ def scrape_data():
         )
         price = price_element.text.strip()
 
+        # Asegurarse de que el precio se guarda como string
+        price = str(price)
+
         # Ruta absoluta para guardar el archivo CSV
         output_file = os.path.join(os.getcwd(), 'output.csv')  # Usamos el directorio actual
         with open(output_file, mode='w', newline='', encoding='utf-8') as file:
