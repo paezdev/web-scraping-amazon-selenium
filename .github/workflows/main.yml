@@ -25,7 +25,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install webdriver-manager  # Asegúrate de que webdriver-manager esté instalado
+          pip install webdriver-manager
 
       # Paso 4: Instalar Brave Browser (si es necesario)
       - name: Install Brave Browser
@@ -50,7 +50,7 @@ jobs:
       # Paso 7: Ejecutar pruebas automatizadas con pytest
       - name: Run tests
         run: |
-          pytest  # Asegúrate de que tu script tenga pruebas definidas en test_*.py
+          pytest
 
       # Paso 8: Subir el archivo generado como artefacto
       - name: Upload Data as Artifact
@@ -59,7 +59,13 @@ jobs:
           name: scraped-data
           path: output.csv
 
-      # Paso 9: Hacer commit del archivo generado al repositorio
+      # Paso 9: Verificar estado de git (opcional)
+      - name: Verificar estado de git
+        run: |
+          git status
+          git remote -v
+
+      # Paso 10: Hacer commit del archivo generado al repositorio
       - name: Push Results to Repository
         if: success()  # Solo ejecuta este paso si los pasos anteriores se completaron exitosamente
         env:
@@ -73,5 +79,6 @@ jobs:
           git add output.csv error_screenshot.png
           git commit -m "Datos extraídos automáticamente"
           git push origin main
+
 
 
