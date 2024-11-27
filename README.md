@@ -83,10 +83,6 @@ El archivo **output.csv** tendrá la siguiente estructura de columnas:
 
 - **Nombre del Producto**
 - **Precio**
-- **Enlace al Producto**
-- **Descripción**
-- **Categoría**
-- **Valoración** (si está disponible)
 
 ## Estructura del Proyecto
 
