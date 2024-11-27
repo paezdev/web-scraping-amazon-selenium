@@ -9,18 +9,16 @@ import csv
 import os
 
 def scrape_data():
-    # Configuración del navegador Brave (si Brave no está disponible, cambiar a Chrome)
+    # Configuración del navegador (Brave o Chrome)
     chrome_options = Options()
-    chrome_options.binary_location = "/usr/bin/google-chrome-stable"  # Cambiar a Chrome si Brave no está disponible
+    chrome_options.binary_location = "/usr/bin/google-chrome-stable"  # Cambiar a Brave si es necesario
     chrome_options.add_argument("--headless")  # Modo sin interfaz gráfica
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
-    
-    # Agregar un user-agent para evitar ser bloqueado
     chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3")
 
-    # Usar WebDriver Manager para obtener el chromedriver
-    service = Service(ChromeDriverManager().install())  # Esto instalará y obtendrá la ruta del WebDriver automáticamente
+    # Configuración del WebDriver
+    service = Service(ChromeDriverManager().install())
     driver = webdriver.Chrome(service=service, options=chrome_options)
 
     # URL del producto en Amazon
@@ -28,49 +26,40 @@ def scrape_data():
     driver.get(url)
 
     try:
+        print("Iniciando extracción de datos...")
+
         # Extraer el título del producto
         title_element = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.ID, 'productTitle'))
         )
         title = title_element.text.strip()
+        print(f"Título del producto: {title}")
 
         # Extraer el precio del producto
         price_element = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.CLASS_NAME, 'a-price-whole'))
         )
         price = price_element.text.strip()
-
-        # Asegurarse de que el precio se guarda como string
-        price = str(price)
+        print(f"Precio del producto: {price}")
 
         # Ruta absoluta para guardar el archivo CSV
-        output_file = os.path.join(os.getcwd(), 'output.csv')  # Usamos el directorio actual
-        
-        # Verificar si el archivo ya existe, si no, se crea uno nuevo
-        if os.path.exists(output_file):
-            print(f"El archivo {output_file} ya existe. Procediendo con la actualización.")
-        else:
-            print(f"Creando nuevo archivo: {output_file}")
-        
-        # Escribir los datos extraídos en el archivo CSV
-        with open(output_file, mode='w', newline='', encoding='utf-8') as file:
-            writer = csv.writer(file)
-            writer.writerow(['Title', 'Price'])  # Encabezados
-            writer.writerow([title, price])     # Datos extraídos
+        output_file = os.path.join(os.getcwd(), 'output.csv')
 
-        # Confirmar que el archivo fue creado o actualizado
-        if os.path.exists(output_file):
-            print(f"El archivo {output_file} fue creado o actualizado exitosamente.")
-        else:
-            print(f"El archivo {output_file} no se pudo crear.")
+        # Escribir o actualizar datos en el archivo CSV
+        file_exists = os.path.exists(output_file)
+        with open(output_file, mode='a' if file_exists else 'w', newline='', encoding='utf-8') as file:
+            writer = csv.writer(file)
+            if not file_exists:
+                writer.writerow(['Title', 'Price'])  # Encabezados
+            writer.writerow([title, price])  # Datos extraídos
+
+        print(f"Datos guardados exitosamente en {output_file}")
 
     except Exception as e:
         print(f"Error al extraer datos: {e}")
 
     finally:
-        # Cerrar el navegador
         driver.quit()
 
 if __name__ == "__main__":
     scrape_data()
-
