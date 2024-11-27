@@ -73,7 +73,7 @@ pip install selenium pandas webdriver-manager
 Una vez que hayas configurado el entorno y las dependencias, ejecuta el siguiente comando para iniciar el scraping:
 
 ```bash
-python scraping_amazon.py
+python PáezRamírez_JeanCarlos_Analizando_EA1.py
 ```
 
 ### 2. Resultado
