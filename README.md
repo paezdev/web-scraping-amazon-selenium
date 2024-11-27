@@ -1,5 +1,3 @@
-¡Ya entiendo lo que necesitas! Aquí tienes el archivo `README.md` completamente dentro de un bloque Markdown, listo para ser copiado y pegado:
-
 ```markdown
 # Proyecto Web Scraping con Selenium para Amazon
 
