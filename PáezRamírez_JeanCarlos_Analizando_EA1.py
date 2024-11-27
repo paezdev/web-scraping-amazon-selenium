@@ -6,11 +6,12 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 import csv
+import os
 
 def scrape_data():
-    # Configuración del navegador Brave
+    # Configuración del navegador Brave (si Brave no está disponible, cambiar a Chrome)
     chrome_options = Options()
-    chrome_options.binary_location = "/usr/bin/brave-browser"  # Ruta de Brave en el entorno Linux
+    chrome_options.binary_location = "/usr/bin/google-chrome-stable"  # Cambiar a Chrome si Brave no está disponible
     chrome_options.add_argument("--headless")  # Modo sin interfaz gráfica
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
@@ -19,7 +20,7 @@ def scrape_data():
     service = Service(ChromeDriverManager().install())  # Esto instalará y obtendrá la ruta del WebDriver automáticamente
     driver = webdriver.Chrome(service=service, options=chrome_options)
 
-    # URL del producto
+    # URL del producto en Amazon
     url = 'https://www.amazon.com/-/es/actividad-resoluci%C3%B3n-deportivos-frecuencia-inteligente/dp/B0B2DK5YCP'
     driver.get(url)
 
@@ -36,13 +37,18 @@ def scrape_data():
         )
         price = price_element.text.strip()
 
-        # Guardar en un archivo CSV
-        with open('output.csv', mode='w', newline='', encoding='utf-8') as file:
+        # Ruta absoluta para guardar el archivo CSV
+        output_file = os.path.join(os.getcwd(), 'output.csv')  # Usamos el directorio actual
+        with open(output_file, mode='w', newline='', encoding='utf-8') as file:
             writer = csv.writer(file)
             writer.writerow(['Title', 'Price'])  # Encabezados
             writer.writerow([title, price])     # Datos extraídos
 
-        print("Datos extraídos y guardados en output.csv")
+        # Confirmar que el archivo fue creado
+        if os.path.exists(output_file):
+            print(f"El archivo {output_file} fue creado exitosamente.")
+        else:
+            print(f"El archivo {output_file} no se pudo crear.")
 
     except Exception as e:
         print(f"Error al extraer datos: {e}")
@@ -53,4 +59,5 @@ def scrape_data():
 
 if __name__ == "__main__":
     scrape_data()
+
 
