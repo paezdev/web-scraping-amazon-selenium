@@ -12,11 +12,11 @@ jobs:
     steps:
     # Paso 1: Clonar el código del repositorio
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     # Paso 2: Configurar Python
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v3
       with:
         python-version: '3.8'
 
@@ -36,7 +36,7 @@ jobs:
 
     # Paso 6: Subir el archivo generado como artefacto
     - name: Upload Data as Artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: scraped-data
         path: output.csv  # Cambia esto al nombre del archivo que genera tu script
