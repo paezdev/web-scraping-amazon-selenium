@@ -19,7 +19,6 @@ __pycache__/
 *.swp
 
 # Archivos de prueba y resultados
-output.csv
 results/
 *.tmp
 
