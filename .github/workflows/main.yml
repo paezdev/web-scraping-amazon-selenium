@@ -36,6 +36,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y brave-browser
           sudo apt-get install -y chromium-chromedriver
+
+          # Eliminar el enlace simbólico existente si ya existe
+          sudo rm -f /usr/bin/chromedriver
+
+          # Crear un nuevo enlace simbólico
           sudo ln -s /usr/lib/chromium-browser/chromedriver /usr/bin/chromedriver
 
       # Paso 5: Ejecutar el script de scraping
@@ -66,3 +71,4 @@ jobs:
           git add output.csv
           git commit -m "Datos extraídos automáticamente"
           git push origin main
+
