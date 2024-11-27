@@ -15,6 +15,9 @@ def scrape_data():
     chrome_options.add_argument("--headless")  # Modo sin interfaz gráfica
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
+    
+    # Agregar un user-agent para evitar ser bloqueado
+    chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3")
 
     # Usar WebDriver Manager para obtener el chromedriver
     service = Service(ChromeDriverManager().install())  # Esto instalará y obtendrá la ruta del WebDriver automáticamente
@@ -55,7 +58,7 @@ def scrape_data():
             writer.writerow(['Title', 'Price'])  # Encabezados
             writer.writerow([title, price])     # Datos extraídos
 
-        # Confirmar que el archivo fue creado
+        # Confirmar que el archivo fue creado o actualizado
         if os.path.exists(output_file):
             print(f"El archivo {output_file} fue creado o actualizado exitosamente.")
         else:
@@ -70,5 +73,4 @@ def scrape_data():
 
 if __name__ == "__main__":
     scrape_data()
-
 
