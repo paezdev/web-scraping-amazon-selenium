@@ -26,13 +26,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # Paso 4: Ejecutar pruebas automatizadas con pytest
-      - name: Run tests
-        run: pytest  # Asegúrate de que tu script tiene pruebas definidas en test_*.py
-
-      # Paso 5: Ejecutar el script de scraping
+      # Paso 4: Ejecutar el script de scraping
       - name: Run scraping script
         run: python PáezRamírez_JeanCarlos_Analizando_EA1.py  # Cambia esto al nombre real de tu script
+
+      # Paso 5: Ejecutar pruebas automatizadas con pytest
+      - name: Run tests
+        run: pytest  # Asegúrate de que tu script tiene pruebas definidas en test_*.py
 
       # Paso 6: Subir el archivo generado como artefacto
       - name: Upload Data as Artifact
