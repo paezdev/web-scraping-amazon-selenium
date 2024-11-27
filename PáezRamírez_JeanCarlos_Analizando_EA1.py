@@ -4,6 +4,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from webdriver_manager.chrome import ChromeDriverManager
 import csv
 
 def scrape_data():
@@ -14,8 +15,8 @@ def scrape_data():
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
 
-    # Configuración del WebDriver
-    service = Service('/usr/bin/chromedriver')  # WebDriver de Brave
+    # Usar WebDriver Manager para obtener el chromedriver
+    service = Service(ChromeDriverManager().install())  # Esto instalará y obtendrá la ruta del WebDriver automáticamente
     driver = webdriver.Chrome(service=service, options=chrome_options)
 
     # URL del producto
@@ -52,3 +53,4 @@ def scrape_data():
 
 if __name__ == "__main__":
     scrape_data()
+
