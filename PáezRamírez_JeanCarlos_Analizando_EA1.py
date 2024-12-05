@@ -53,97 +53,53 @@ def scrape_data():
         driver.get(url)
         time.sleep(random.uniform(3, 5))
 
-        # Selectores para el título
-        title_selectors = [
-            (By.ID, 'productTitle'),
-            (By.CSS_SELECTOR, 'h1.a-size-large'),
-            (By.CSS_SELECTOR, 'span#productTitle'),
-            (By.XPATH, "//span[@id='productTitle']")
-        ]
-
-        # Extraer título
+        # Selector optimizado para el título
         title = "Título no disponible"
-        for selector_type, selector in title_selectors:
-            try:
-                title_element = WebDriverWait(driver, 10).until(
-                    EC.presence_of_element_located((selector_type, selector))
-                )
-                title = title_element.text.strip()
-                if title:
-                    print(f"Título extraído: {title}")
-                    break
-            except:
-                continue
+        try:
+            title_element = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.ID, 'productTitle'))
+            )
+            title = title_element.text.strip()
+            print(f"Título extraído: {title}")
+        except Exception as e:
+            print(f"Error al extraer título: {str(e)}")
 
-        # Selectores para el precio
-        price_selectors = [
-            (By.CSS_SELECTOR, 'span.a-price-whole'),
-            (By.CSS_SELECTOR, 'span.a-offscreen'),
-            (By.CSS_SELECTOR, '#priceblock_ourprice'),
-            (By.CSS_SELECTOR, '#priceblock_dealprice'),
-            (By.CSS_SELECTOR, '.a-price .a-offscreen'),
-            (By.XPATH, "//span[@class='a-price-whole']"),
-            (By.XPATH, "//span[@class='a-offscreen'][contains(text(),'$')]")
-        ]
-
-        # Extraer precio
+        # Selectores optimizados para el precio
         price = "Precio no disponible"
-        for selector_type, selector in price_selectors:
-            try:
-                price_element = WebDriverWait(driver, 10).until(
-                    EC.presence_of_element_located((selector_type, selector))
-                )
-                price = price_element.text.strip().replace('US$', '').replace(',', '').replace('$', '')
-                if price:
-                    print(f"Precio extraído: {price}")
-                    break
-            except:
-                continue
+        try:
+            # Primero intentamos obtener el precio entero
+            price_whole = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, 'span.a-price-whole'))
+            )
+            # Luego intentamos obtener los decimales
+            price_fraction = driver.find_element(By.CSS_SELECTOR, 'span.a-price-fraction')
+            price = f"{price_whole.text.strip()}.{price_fraction.text.strip()}"
+            print(f"Precio extraído: {price}")
+        except Exception as e:
+            print(f"Error al extraer precio: {str(e)}")
 
-        # Selectores para el rating
-        rating_selectors = [
-            (By.CSS_SELECTOR, 'span.a-icon-alt'),
-            (By.CSS_SELECTOR, '#acrPopover .a-icon-alt'),
-            (By.XPATH, "//span[@class='a-icon-alt'][contains(text(),'de 5')]"),
-            (By.CSS_SELECTOR, 'i.a-icon-star .a-icon-alt')
-        ]
-
-        # Extraer rating
+        # Selector optimizado para el rating
         rating = "N/A"
-        for selector_type, selector in rating_selectors:
-            try:
-                rating_element = WebDriverWait(driver, 10).until(
-                    EC.presence_of_element_located((selector_type, selector))
-                )
-                rating_text = rating_element.get_attribute('innerHTML')
-                rating = rating_text.split(' de ')[0].strip()
-                if rating:
-                    print(f"Rating extraído: {rating}")
-                    break
-            except:
-                continue
+        try:
+            rating_element = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, 'span.a-icon-alt'))
+            )
+            rating_text = rating_element.get_attribute('innerHTML')
+            rating = rating_text.split(' de ')[0].strip()
+            print(f"Rating extraído: {rating}")
+        except Exception as e:
+            print(f"Error al extraer rating: {str(e)}")
 
-        # Selectores para reviews
-        review_selectors = [
-            (By.ID, 'acrCustomerReviewText'),
-            (By.CSS_SELECTOR, '#acrCustomerReviewText'),
-            (By.XPATH, "//span[@id='acrCustomerReviewText']"),
-            (By.CSS_SELECTOR, 'span[data-hook="total-review-count"]')
-        ]
-
-        # Extraer número de reviews
+        # Selector optimizado para reviews
         reviews = "0"
-        for selector_type, selector in review_selectors:
-            try:
-                reviews_element = WebDriverWait(driver, 10).until(
-                    EC.presence_of_element_located((selector_type, selector))
-                )
-                reviews = reviews_element.text.split(' ')[0].replace(',', '').replace('.', '')
-                if reviews:
-                    print(f"Número de reviews extraído: {reviews}")
-                    break
-            except:
-                continue
+        try:
+            reviews_element = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.ID, 'acrCustomerReviewText'))
+            )
+            reviews = reviews_element.text.split(' ')[0].replace(',', '').replace('.', '')
+            print(f"Número de reviews extraído: {reviews}")
+        except Exception as e:
+            print(f"Error al extraer reviews: {str(e)}")
 
         # Guardar detalles en archivo de texto
         with open('product_details.txt', 'w', encoding='utf-8') as f:
