@@ -5,6 +5,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 def scrape_data():
     """Función para extraer datos de Amazon y guardarlos en archivos CSV y de texto."""
@@ -28,6 +30,9 @@ def scrape_data():
     try:
         driver.get(url)
         driver.maximize_window()
+
+        # Espera explícita para asegurarse de que el título del producto esté cargado
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, 'productTitle')))
 
         # Extraemos el título del producto
         try:
@@ -73,6 +78,14 @@ def scrape_data():
             writer = csv.DictWriter(file, fieldnames=['Title', 'Price', 'Rating', 'Features', 'Number_of_Reviews'])
             writer.writeheader()
             writer.writerows(data)
+
+        # Crear el archivo product_details.txt con los mismos datos
+        with open('product_details.txt', mode='w', encoding='utf-8') as text_file:
+            text_file.write(f"Title: {title}\n")
+            text_file.write(f"Price: {price}\n")
+            text_file.write(f"Rating: {rating}\n")
+            text_file.write(f"Features: {features}\n")
+            text_file.write(f"Number of Reviews: {reviews}\n")
 
         # Tomamos una captura de pantalla
         screenshot_path = 'success_screenshot.png'

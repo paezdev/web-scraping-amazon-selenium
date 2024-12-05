@@ -61,6 +61,7 @@ jobs:
             output.csv
             error_screenshot.png
             success_screenshot.png
+            product_details.txt  # Asegúrate de incluir este archivo
 
       # Paso 9: Verificar estado de git (opcional)
       - name: Verificar estado de git
