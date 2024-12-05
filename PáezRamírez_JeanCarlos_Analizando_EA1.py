@@ -24,17 +24,20 @@ def scrape_data():
     # Usamos el WebDriver de Chrome pero apuntando a Brave
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
     
-    url = 'https://www.amazon.com/-/es/inteligente-frecuencia-Bluetooth-deportivo-M2239B1/dp/B0C3B42Q29'
+    url = 'https://www.amazon.com/-/es/Xiaomi-Smart-Band-Global-Version/dp/B0CD2MP728'
     data = []
 
     try:
         driver.get(url)
         driver.maximize_window()
 
-        # Espera explícita para asegurarse de que el título y otros elementos estén cargados
-        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, 'productTitle')))
-        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, 'a-price-whole')))
-        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, 'a-size-base')))
+        # Extender tiempos de espera explícita
+        WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.ID, 'productTitle')))
+        WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.CLASS_NAME, 'a-price-whole')))
+        WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.CLASS_NAME, 'a-size-base')))
+
+        # Pausar entre interacciones para evitar ser detectado como bot
+        time.sleep(3)  # Pausa de 3 segundos antes de continuar
 
         # Extraemos el título del producto
         try:
@@ -105,3 +108,4 @@ def scrape_data():
 
 if __name__ == "__main__":
     scrape_data()
+
