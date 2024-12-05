@@ -10,79 +10,125 @@ import os
 import time
 
 def scrape_data():
-    # Configuración del navegador Brave (si Brave no está disponible, cambiar a Chrome)
+    # Configuración del navegador
     chrome_options = Options()
-    chrome_options.binary_location = "/usr/bin/google-chrome-stable"  # Cambiar a Chrome si Brave no está disponible
-    chrome_options.add_argument("--headless")  # Modo sin interfaz gráfica
+    chrome_options.binary_location = "/usr/bin/google-chrome-stable"
+    chrome_options.add_argument("--headless")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
-    
-    # Agregar un user-agent para evitar ser bloqueado
     chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3")
 
-    # Usar WebDriver Manager para obtener el chromedriver
-    service = Service(ChromeDriverManager().install())  # Esto instalará y obtendrá la ruta del WebDriver automáticamente
+    service = Service(ChromeDriverManager().install())
     driver = webdriver.Chrome(service=service, options=chrome_options)
 
-    # URL del producto en Amazon
     url = 'https://www.amazon.com/-/es/Xiaomi-Smart-Band-Global-Version/dp/B0CD2MP728/ref=sr_1_1?sr=8-1'
     driver.get(url)
 
     try:
         print("Página cargada. Intentando extraer datos...")
 
-        # Esperar a que el título esté presente en la página (20 segundos)
+        # Dictionary para almacenar toda la información
+        product_info = {}
+
+        # Extraer título
         title_element = WebDriverWait(driver, 20).until(
             EC.presence_of_element_located((By.ID, 'productTitle'))
         )
-        title = title_element.text.strip()  # Eliminar espacios adicionales
+        product_info['Title'] = title_element.text.strip()
 
-        # Verificar si se extrajo el título
-        if not title:
-            raise Exception("No se pudo extraer el título del producto.")
-        
-        print(f"Título extraído: {title}")
-        
-        # Extraer el precio del producto
+        # Extraer precio
         try:
             price_element = WebDriverWait(driver, 20).until(
                 EC.presence_of_element_located((By.CLASS_NAME, 'a-price-whole'))
             )
-            price = price_element.text.strip()
-            # Asegurarse de que el precio se guarda como string
-            price = str(price)
-            print(f"Precio extraído: {price}")
-        except Exception as e:
-            raise Exception("No se pudo extraer el precio del producto.") from e
+            product_info['Price'] = price_element.text.strip()
+        except:
+            product_info['Price'] = "Precio no disponible"
 
-        # Ruta absoluta para guardar el archivo CSV
-        output_file = os.path.join(os.getcwd(), 'output.csv')  # Usamos el directorio actual
-        
-        # Verificar si el archivo ya existe, si no, se crea uno nuevo
-        if os.path.exists(output_file):
-            print(f"El archivo {output_file} ya existe. Procediendo con la actualización.")
-        else:
-            print(f"Creando nuevo archivo: {output_file}")
-        
+        # Extraer calificación
+        try:
+            rating_element = driver.find_element(By.ID, 'acrPopover')
+            product_info['Rating'] = rating_element.get_attribute('title')
+        except:
+            product_info['Rating'] = "Calificación no disponible"
+
+        # Extraer número de reseñas
+        try:
+            reviews_element = driver.find_element(By.ID, 'acrCustomerReviewText')
+            product_info['Number_of_Reviews'] = reviews_element.text
+        except:
+            product_info['Number_of_Reviews'] = "Reseñas no disponibles"
+
+        # Extraer disponibilidad
+        try:
+            availability_element = driver.find_element(By.ID, 'availability')
+            product_info['Availability'] = availability_element.text.strip()
+        except:
+            product_info['Availability'] = "Disponibilidad no especificada"
+
+        # Extraer detalles técnicos
+        try:
+            details_table = driver.find_element(By.ID, 'productDetails_techSpec_section_1')
+            rows = details_table.find_elements(By.TAG_NAME, 'tr')
+            for row in rows:
+                try:
+                    label = row.find_element(By.CLASS_NAME, 'label').text.strip()
+                    value = row.find_element(By.CLASS_NAME, 'value').text.strip()
+                    product_info[f"Spec_{label}"] = value
+                except:
+                    continue
+        except:
+            product_info['Technical_Details'] = "Detalles técnicos no disponibles"
+
+        # Extraer descripción del producto
+        try:
+            description_element = driver.find_element(By.ID, 'productDescription')
+            product_info['Description'] = description_element.text.strip()
+        except:
+            product_info['Description'] = "Descripción no disponible"
+
+        # Extraer características principales (Bullet points)
+        try:
+            features_list = driver.find_element(By.ID, 'feature-bullets')
+            features = features_list.find_elements(By.TAG_NAME, 'li')
+            product_info['Features'] = [feature.text.strip() for feature in features]
+        except:
+            product_info['Features'] = "Características no disponibles"
+
+        # Extraer información del vendedor
+        try:
+            seller_element = driver.find_element(By.ID, 'merchant-info')
+            product_info['Seller_Info'] = seller_element.text.strip()
+        except:
+            product_info['Seller_Info'] = "Información del vendedor no disponible"
+
+        # Guardar en CSV
+        output_file = os.path.join(os.getcwd(), 'output.csv')
+
         # Escribir los datos extraídos en el archivo CSV
         with open(output_file, mode='w', newline='', encoding='utf-8') as file:
             writer = csv.writer(file)
-            writer.writerow(['Title', 'Price'])  # Encabezados
-            writer.writerow([title, price])     # Datos extraídos
+            # Escribir encabezados
+            writer.writerow(product_info.keys())
+            # Escribir valores
+            writer.writerow(product_info.values())
 
-        # Confirmar que el archivo fue creado o actualizado
-        if os.path.exists(output_file):
-            print(f"El archivo {output_file} fue creado o actualizado exitosamente.")
-        else:
-            print(f"El archivo {output_file} no se pudo crear.")
+        print(f"Datos extraídos y guardados en {output_file}")
+
+        # También guardar en formato más legible
+        readable_output = os.path.join(os.getcwd(), 'product_details.txt')
+        with open(readable_output, mode='w', encoding='utf-8') as file:
+            for key, value in product_info.items():
+                file.write(f"{key}:\n{value}\n\n")
+
+        print(f"Detalles completos guardados en {readable_output}")
 
     except Exception as e:
         print(f"Error al extraer datos: {e}")
-        driver.save_screenshot('error_screenshot.png')  # Captura de pantalla en caso de error
+        driver.save_screenshot('error_screenshot.png')
         print("Captura de pantalla del error guardada como error_screenshot.png")
 
     finally:
-        # Cerrar el navegador
         driver.quit()
 
 if __name__ == "__main__":
