@@ -21,56 +21,73 @@ def get_random_user_agent():
     return random.choice(user_agents)
 
 def scrape_data():
-    # Configuración del navegador
+    # Configuración del navegador con más opciones anti-detección
     chrome_options = Options()
     chrome_options.binary_location = "/usr/bin/google-chrome-stable"
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+    chrome_options.add_argument("--disable-notifications")
+    chrome_options.add_argument("--window-size=1920,1080")
     chrome_options.add_argument(f"user-agent={get_random_user_agent()}")
 
-    # Configuraciones adicionales para evitar detección
-    chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+    # Añadir más headers aleatorios
+    chrome_options.add_argument("--accept-language=es-ES,es;q=0.9,en;q=0.8")
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--ignore-certificate-errors")
+    chrome_options.add_argument("--allow-running-insecure-content")
+
+    # Configuraciones experimentales
     chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
     chrome_options.add_experimental_option('useAutomationExtension', False)
 
-    # Configurar el servicio
     service = Service(ChromeDriverManager().install())
     driver = webdriver.Chrome(service=service, options=chrome_options)
 
-    # Modificar el navigator.webdriver
+    # Modificar más propiedades del navegador para evitar detección
     driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
-
-    # URL del producto
-    url = 'https://www.amazon.com/-/es/Xiaomi-Smart-Band-Global-Version/dp/B0CD2MP728/'
+    driver.execute_script("Object.defineProperty(navigator, 'languages', {get: () => ['es-ES', 'es']})")
 
     try:
         print("Iniciando extracción de datos...")
 
-        # Añadir delay aleatorio antes de cargar la página
-        time.sleep(random.uniform(2, 5))
+        # Añadir delays más naturales y aleatorios
+        time.sleep(random.uniform(3, 7))
+
+        # URL del producto
+        url = 'https://www.amazon.com/-/es/Xiaomi-Smart-Band-Global-Version/dp/B0CD2MP728/'
         driver.get(url)
 
-        # Esperar un tiempo aleatorio después de cargar la página
-        time.sleep(random.uniform(3, 7))
+        # Simular comportamiento humano
+        for _ in range(3):
+            driver.execute_script(f"window.scrollTo(0, {random.randint(300, 700)});")
+            time.sleep(random.uniform(1, 3))
 
         print("Página cargada. Intentando extraer datos...")
 
-        # Extraer título
-        try:
-            title_element = WebDriverWait(driver, 30).until(
-                EC.presence_of_element_located((By.ID, 'productTitle'))
-            )
-            title = title_element.text.strip()
-            print(f"Título extraído: {title}")
-        except TimeoutException:
-            print("Tiempo de espera agotado al buscar el título")
-            title = "Título no disponible"
-        except Exception as e:
-            print(f"Error al extraer título: {str(e)}")
-            title = "Error en título"
+        # Verificar si hay CAPTCHA
+        if "robot" in driver.page_source.lower() or "captcha" in driver.page_source.lower():
+            print("CAPTCHA detectado - Esperando más tiempo...")
+            time.sleep(random.uniform(10, 15))
+            driver.refresh()
+            time.sleep(random.uniform(5, 8))
 
-        # Extraer precio
+        # Extraer título con múltiples intentos
+        title = "Título no disponible"
+        for _ in range(3):
+            try:
+                title_element = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.ID, 'productTitle'))
+                )
+                title = title_element.text.strip()
+                print(f"Título extraído: {title}")
+                break
+            except:
+                time.sleep(random.uniform(2, 4))
+                continue
+
+        # Extraer precio con múltiples intentos
         price = "Precio no disponible"
         price_selectors = [
             (By.CLASS_NAME, 'a-price-whole'),
@@ -90,7 +107,8 @@ def scrape_data():
             except:
                 continue
 
-        # Añadir extracción de rating
+        # Extraer rating
+        rating = "N/A"
         try:
             rating_element = WebDriverWait(driver, 10).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, 'span[class*="a-icon-alt"]'))
@@ -98,10 +116,10 @@ def scrape_data():
             rating = rating_element.get_attribute('innerHTML').split(' de ')[0]
             print(f"Rating extraído: {rating}")
         except:
-            rating = "N/A"
             print("Rating no encontrado")
 
-        # Añadir extracción de número de reviews
+        # Extraer número de reviews
+        reviews = "0"
         try:
             reviews_element = WebDriverWait(driver, 10).until(
                 EC.presence_of_element_located((By.ID, 'acrCustomerReviewText'))
@@ -109,7 +127,6 @@ def scrape_data():
             reviews = reviews_element.text.split(' ')[0]
             print(f"Número de reviews extraído: {reviews}")
         except:
-            reviews = "0"
             print("Número de reviews no encontrado")
 
         # Guardar detalles en archivo de texto
@@ -119,17 +136,16 @@ def scrape_data():
             f.write(f"Rating: {rating}\n")
             f.write(f"Número de Reviews: {reviews}\n")
 
-        # Guardar datos en CSV
-        output_file = os.path.join(os.getcwd(), 'output.csv')
-        with open(output_file, mode='w', newline='', encoding='utf-8') as file:
+        # Guardar en CSV
+        with open('output.csv', mode='w', newline='', encoding='utf-8') as file:
             writer = csv.writer(file)
             writer.writerow(['Title', 'Price', 'Rating', 'Number_of_Reviews'])
             writer.writerow([title, price, rating, reviews])
 
-        print(f"Datos guardados en {output_file}")
+        print(f"Datos guardados en {os.getcwd()}/output.csv")
         print(f"Detalles guardados en {os.getcwd()}/product_details.txt")
 
-        # Tomar captura de pantalla del éxito
+        # Tomar captura de pantalla
         driver.save_screenshot('success_screenshot.png')
         print("Captura de pantalla guardada como success_screenshot.png")
 
@@ -142,3 +158,14 @@ def scrape_data():
     finally:
         print("Cerrando el navegador...")
         driver.quit()
+
+def get_random_user_agent():
+    user_agents = [
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.1 Safari/605.1.15",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 Edg/91.0.864.59",
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.82 Safari/537.36"
+    ]
+    return random.choice(user_agents)
