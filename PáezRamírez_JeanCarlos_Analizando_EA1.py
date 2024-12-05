@@ -1,91 +1,103 @@
+import time
+import csv
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.chrome import ChromeDriverManager
-import csv
-import os
-import time
 
 def scrape_data():
-    # Configuración del navegador Brave (si Brave no está disponible, cambiar a Chrome)
+    """Función para extraer datos de Amazon y guardarlos en archivos CSV y de texto."""
+
+    # Configuración de WebDriver para Brave Browser
     chrome_options = Options()
-    chrome_options.binary_location = "/usr/bin/google-chrome-stable"  # Cambiar a Chrome si Brave no está disponible
-    chrome_options.add_argument("--headless")  # Modo sin interfaz gráfica
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--headless")  # Ejecutar sin interfaz gráfica
+    chrome_options.add_argument("--no-sandbox")  # Requerido para entornos CI
+    chrome_options.add_argument("--disable-dev-shm-usage")  # Optimización para entornos CI
+    chrome_options.add_argument("--remote-debugging-port=9222")  # Depuración remota
+
+    # Especifica la ruta al ejecutable de Brave (por defecto suele estar en /usr/bin/brave-browser en entornos CI)
+    chrome_options.binary_location = "/usr/bin/brave-browser"
+
+    # Usamos el WebDriver de Chrome pero apuntando a Brave
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
     
-    # Agregar un user-agent para evitar ser bloqueado
-    chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3")
-
-    # Usar WebDriver Manager para obtener el chromedriver
-    service = Service(ChromeDriverManager().install())  # Esto instalará y obtendrá la ruta del WebDriver automáticamente
-    driver = webdriver.Chrome(service=service, options=chrome_options)
-
-    # URL del producto en Amazon
-    url = 'https://www.amazon.com/-/es/Xiaomi-Smart-Band-Global-Version/dp/B0CD2MP728/ref=sr_1_1?sr=8-1'
-    driver.get(url)
+    url = 'https://www.amazon.com/-/es/inteligente-frecuencia-Bluetooth-deportivo-M2239B1/dp/B0C3B42Q29'
+    data = []
 
     try:
-        print("Página cargada. Intentando extraer datos...")
+        driver.get(url)
+        driver.maximize_window()
 
-        # Esperar a que el título esté presente en la página (20 segundos)
-        title_element = WebDriverWait(driver, 20).until(
-            EC.presence_of_element_located((By.ID, 'productTitle'))
-        )
-        title = title_element.text.strip()  # Eliminar espacios adicionales
+        # Espera explícita para asegurarse de que el título del producto esté cargado
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, 'productTitle')))
 
-        # Verificar si se extrajo el título
-        if not title:
-            raise Exception("No se pudo extraer el título del producto.")
-        
-        print(f"Título extraído: {title}")
-        
-        # Extraer el precio del producto
+        # Extraemos el título del producto
         try:
-            price_element = WebDriverWait(driver, 20).until(
-                EC.presence_of_element_located((By.CLASS_NAME, 'a-price-whole'))
-            )
-            price = price_element.text.strip()
-            # Asegurarse de que el precio se guarda como string
-            price = str(price)
-            print(f"Precio extraído: {price}")
+            title = driver.find_element(By.ID, 'productTitle').text
         except Exception as e:
-            raise Exception("No se pudo extraer el precio del producto.") from e
+            title = "No encontrado"
 
-        # Ruta absoluta para guardar el archivo CSV
-        output_file = os.path.join(os.getcwd(), 'output.csv')  # Usamos el directorio actual
-        
-        # Verificar si el archivo ya existe, si no, se crea uno nuevo
-        if os.path.exists(output_file):
-            print(f"El archivo {output_file} ya existe. Procediendo con la actualización.")
-        else:
-            print(f"Creando nuevo archivo: {output_file}")
-        
-        # Escribir los datos extraídos en el archivo CSV
-        with open(output_file, mode='w', newline='', encoding='utf-8') as file:
-            writer = csv.writer(file)
-            writer.writerow(['Title', 'Price'])  # Encabezados
-            writer.writerow([title, price])     # Datos extraídos
+        # Extraemos el precio del producto
+        try:
+            price = driver.find_element(By.ID, 'priceblock_ourprice').text
+        except Exception as e:
+            price = "No disponible"
 
-        # Confirmar que el archivo fue creado o actualizado
-        if os.path.exists(output_file):
-            print(f"El archivo {output_file} fue creado o actualizado exitosamente.")
-        else:
-            print(f"El archivo {output_file} no se pudo crear.")
+        # Extraemos el rating del producto
+        try:
+            rating = driver.find_element(By.CLASS_NAME, 'a-icon-alt').text
+        except Exception as e:
+            rating = "No disponible"
+
+        # Extraemos las características clave (especificaciones)
+        try:
+            features = driver.find_element(By.ID, 'feature-bullets').text
+        except Exception as e:
+            features = "No disponibles"
+        
+        # Extraemos el número de reseñas
+        try:
+            reviews = driver.find_element(By.ID, 'acrCustomerReviewText').text
+        except Exception as e:
+            reviews = "No disponibles"
+
+        # Guardamos los datos extraídos en un diccionario
+        data.append({
+            'Title': title,
+            'Price': price,
+            'Rating': rating,
+            'Features': features,
+            'Number_of_Reviews': reviews  # Añadimos la columna de reseñas
+        })
+
+        # Guardamos los datos en un archivo CSV
+        with open('output.csv', mode='w', newline='', encoding='utf-8') as file:
+            writer = csv.DictWriter(file, fieldnames=['Title', 'Price', 'Rating', 'Features', 'Number_of_Reviews'])
+            writer.writeheader()
+            writer.writerows(data)
+
+        # Crear el archivo product_details.txt con los mismos datos
+        with open('product_details.txt', mode='w', encoding='utf-8') as text_file:
+            text_file.write(f"Title: {title}\n")
+            text_file.write(f"Price: {price}\n")
+            text_file.write(f"Rating: {rating}\n")
+            text_file.write(f"Features: {features}\n")
+            text_file.write(f"Number of Reviews: {reviews}\n")
+
+        # Tomamos una captura de pantalla
+        screenshot_path = 'success_screenshot.png'
+        driver.save_screenshot(screenshot_path)
 
     except Exception as e:
-        print(f"Error al extraer datos: {e}")
-        driver.save_screenshot('error_screenshot.png')  # Captura de pantalla en caso de error
-        print("Captura de pantalla del error guardada como error_screenshot.png")
+        # Si ocurre un error, tomamos una captura de pantalla de la página de error
+        error_screenshot_path = 'error_screenshot.png'
+        driver.save_screenshot(error_screenshot_path)
 
     finally:
-        # Cerrar el navegador
         driver.quit()
 
 if __name__ == "__main__":
     scrape_data()
-
-

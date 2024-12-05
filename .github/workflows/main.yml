@@ -12,11 +12,11 @@ jobs:
     steps:
       # Paso 1: Clonar el código del repositorio
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
 
       # Paso 2: Configurar Python
       - name: Set up Python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v2
         with:
           python-version: '3.8'
 
@@ -52,12 +52,16 @@ jobs:
         run: |
           pytest
 
-      # Paso 8: Subir el archivo generado como artefacto
-      - name: Upload Data as Artifact
+      # Paso 8: Subir los archivos generados como artefactos
+      - name: Upload Data as Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: scraped-data
-          path: output.csv
+          path: |
+            output.csv
+            error_screenshot.png
+            success_screenshot.png
+            product_details.txt  # Asegúrate de incluir este archivo
 
       # Paso 9: Verificar estado de git (opcional)
       - name: Verificar estado de git
@@ -65,20 +69,30 @@ jobs:
           git status
           git remote -v
 
-      # Paso 10: Hacer commit del archivo generado al repositorio
+      # Paso 10: Hacer commit de los archivos generados al repositorio
       - name: Push Results to Repository
-        if: success()  # Solo ejecuta este paso si los pasos anteriores se completaron exitosamente
+        if: success()
         env:
           SCRAPING: ${{ secrets.SCRAPING }}
         run: |
-          git config --global user.name 'GitHub Actions'
-          git config --global user.email 'actions@github.com'
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           git remote set-url origin https://x-access-token:${SCRAPING}@github.com/${{ github.repository }}
-          
-          # Agregar ambos archivos (output.csv y error_screenshot.png)
-          git add output.csv error_screenshot.png
-          git commit -m "Datos extraídos automáticamente"
-          git push origin main
 
+          # Verificar si hay cambios
+          if [[ -f output.csv && -f success_screenshot.png ]]; then
+            git add output.csv
+            git add success_screenshot.png
+            git add error_screenshot.png || true
+            git add product_details.txt || true
 
-
+            # Verificar si hay cambios para hacer commit
+            if git diff --staged --quiet; then
+              echo "No hay cambios para hacer commit"
+            else
+              git commit -m "Actualización automática de datos extraídos [skip ci]"
+              git push origin main
+            fi
+          else
+            echo "No se encontraron los archivos necesarios para hacer commit"
+          fi
