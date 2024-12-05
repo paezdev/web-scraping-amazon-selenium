@@ -34,7 +34,7 @@ def scrape_data():
         # Espera explícita para asegurarse de que el título y otros elementos estén cargados
         WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, 'productTitle')))
         WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, 'a-price-whole')))
-        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, 'a-icon-alt')))
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, 'a-size-base')))
 
         # Extraemos el título del producto
         try:
@@ -50,13 +50,11 @@ def scrape_data():
         except Exception as e:
             price = "No disponible"
 
-        # Extraemos el rating del producto (en formato decimal)
+        # Extraemos el rating del producto
         try:
-            rating = driver.find_element(By.CLASS_NAME, 'a-icon-alt').text
-            # Extraemos el valor numérico del rating
-            rating_value = rating.split(" ")[0]  # Obtiene la primera parte antes de "de 5 estrellas"
+            rating = driver.find_element(By.CLASS_NAME, 'a-size-base').text
         except Exception as e:
-            rating_value = "No disponible"
+            rating = "No disponible"
 
         # Extraemos las características clave (especificaciones)
         try:
@@ -74,7 +72,7 @@ def scrape_data():
         data.append({
             'Title': title,
             'Price': price,
-            'Rating': rating_value,
+            'Rating': rating,
             'Features': features,
             'Number_of_Reviews': reviews  # Añadimos la columna de reseñas
         })
@@ -89,7 +87,7 @@ def scrape_data():
         with open('product_details.txt', mode='w', encoding='utf-8') as text_file:
             text_file.write(f"Title: {title}\n")
             text_file.write(f"Price: {price}\n")
-            text_file.write(f"Rating: {rating_value}\n")
+            text_file.write(f"Rating: {rating}\n")
             text_file.write(f"Features: {features}\n")
             text_file.write(f"Number of Reviews: {reviews}\n")
 
@@ -107,4 +105,3 @@ def scrape_data():
 
 if __name__ == "__main__":
     scrape_data()
-
