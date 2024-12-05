@@ -24,7 +24,7 @@ def scrape_data():
     # Usamos el WebDriver de Chrome pero apuntando a Brave
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
     
-    url = 'https://www.amazon.com/-/es/Xiaomi-Smart-Band-Global-Version/dp/B0CD2MP728'
+    url = 'https://www.amazon.com/-/es/inteligente-frecuencia-Bluetooth-deportivo-M2239B1/dp/B0C3B42Q29'
     data = []
 
     try:
@@ -42,15 +42,19 @@ def scrape_data():
 
         # Extraemos el precio del producto
         try:
-            price = driver.find_element(By.ID, 'priceblock_ourprice').text
+            price_whole = driver.find_element(By.CLASS_NAME, 'a-price-whole').text
+            price_fraction = driver.find_element(By.CLASS_NAME, 'a-price-fraction').text
+            price = f"US${price_whole}.{price_fraction}"
         except Exception as e:
             price = "No disponible"
 
-        # Extraemos el rating del producto
+        # Extraemos el rating del producto (en formato decimal)
         try:
             rating = driver.find_element(By.CLASS_NAME, 'a-icon-alt').text
+            # Extraemos el valor numérico del rating
+            rating_value = rating.split(" ")[0]  # Obtiene la primera parte antes de "de 5 estrellas"
         except Exception as e:
-            rating = "No disponible"
+            rating_value = "No disponible"
 
         # Extraemos las características clave (especificaciones)
         try:
@@ -68,7 +72,7 @@ def scrape_data():
         data.append({
             'Title': title,
             'Price': price,
-            'Rating': rating,
+            'Rating': rating_value,
             'Features': features,
             'Number_of_Reviews': reviews  # Añadimos la columna de reseñas
         })
@@ -83,7 +87,7 @@ def scrape_data():
         with open('product_details.txt', mode='w', encoding='utf-8') as text_file:
             text_file.write(f"Title: {title}\n")
             text_file.write(f"Price: {price}\n")
-            text_file.write(f"Rating: {rating}\n")
+            text_file.write(f"Rating: {rating_value}\n")
             text_file.write(f"Features: {features}\n")
             text_file.write(f"Number of Reviews: {reviews}\n")
 
