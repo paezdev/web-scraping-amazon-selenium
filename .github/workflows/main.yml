@@ -59,7 +59,8 @@ jobs:
           name: scraped-data
           path: |
             output.csv
-            product_details.txt
+            error_screenshot.png
+            success_screenshot.png
 
       # Paso 9: Verificar estado de git (opcional)
       - name: Verificar estado de git
@@ -69,7 +70,7 @@ jobs:
 
       # Paso 10: Hacer commit de los archivos generados al repositorio
       - name: Push Results to Repository
-        if: success()  # Solo ejecuta este paso si los pasos anteriores se completaron exitosamente
+        if: success()
         env:
           SCRAPING: ${{ secrets.SCRAPING }}
         run: |
@@ -78,13 +79,6 @@ jobs:
           git remote set-url origin https://x-access-token:${SCRAPING}@github.com/${{ github.repository }}
 
           # Agregar todos los archivos generados
-          git add output.csv product_details.txt error_screenshot.png
-
-          # Crear un commit más descriptivo
-          git commit -m "Actualización automática de datos extraídos
-
-          - Actualizado output.csv con datos básicos
-          - Agregado product_details.txt con información detallada
-          - Incluida captura de pantalla si hubo errores"
-
+          git add output.csv error_screenshot.png success_screenshot.png
+          git commit -m "Actualización automática de datos extraídos y capturas de pantalla"
           git push origin main
