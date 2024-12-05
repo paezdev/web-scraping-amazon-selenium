@@ -31,8 +31,10 @@ def scrape_data():
         driver.get(url)
         driver.maximize_window()
 
-        # Espera explícita para asegurarse de que el título del producto esté cargado
+        # Espera explícita para asegurarse de que el título y otros elementos estén cargados
         WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, 'productTitle')))
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, 'a-price-whole')))
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, 'a-icon-alt')))
 
         # Extraemos el título del producto
         try:
@@ -105,3 +107,4 @@ def scrape_data():
 
 if __name__ == "__main__":
     scrape_data()
+
