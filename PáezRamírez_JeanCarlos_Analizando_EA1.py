@@ -22,7 +22,7 @@ def scrape_data():
     # Usamos el WebDriver de Chrome pero apuntando a Brave
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
     
-    url = 'https://www.amazon.com/-/es/Xiaomi-Smart-Band-Global-Version/dp/B0CD2MP728/'
+    url = 'https://www.amazon.com/-/es/inteligente-frecuencia-Bluetooth-deportivo-M2239B1/dp/B0C3B42Q29'
     data = []
 
     try:
