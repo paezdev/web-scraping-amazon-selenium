@@ -71,27 +71,32 @@ jobs:
 
       # Paso 10: Hacer commit de los archivos generados al repositorio
       - name: Push Results to Repository
-        if: success()
+        if: success()  # Asegúrate de que solo se ejecute si el pipeline fue exitoso
         env:
-          SCRAPING: ${{ secrets.SCRAPING }}
+          SCRAPING: ${{ secrets.SCRAPING }}  # Obtiene el token de acceso desde los secretos de GitHub
         run: |
+          # Configurar el usuario de git
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+          # Establecer la URL remota usando el token de acceso personal (PAT)
           git remote set-url origin https://x-access-token:${SCRAPING}@github.com/${{ github.repository }}
 
-          # Verificar si hay cambios
+          # Verificar si los archivos necesarios existen
           if [[ -f output.csv && -f success_screenshot.png ]]; then
+            # Agregar los archivos al commit
             git add output.csv
             git add success_screenshot.png
-            git add error_screenshot.png || true
-            git add product_details.txt || true
+            git add error_screenshot.png || true  # Se agrega aunque falle (en caso de no existir)
+            git add product_details.txt || true  # Se agrega aunque falle (en caso de no existir)
 
             # Verificar si hay cambios para hacer commit
             if git diff --staged --quiet; then
               echo "No hay cambios para hacer commit"
             else
+              # Hacer el commit si hay cambios
               git commit -m "Actualización automática de datos extraídos [skip ci]"
-              git push origin main
+              git push origin main  # Subir los cambios a la rama principal
             fi
           else
             echo "No se encontraron los archivos necesarios para hacer commit"
