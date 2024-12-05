@@ -5,7 +5,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.common.action_chains import ActionChains
 
 def scrape_data():
     """Función para extraer datos de Amazon y guardarlos en archivos CSV y de texto."""
@@ -53,18 +52,25 @@ def scrape_data():
             features = driver.find_element(By.ID, 'feature-bullets').text
         except Exception as e:
             features = "No disponibles"
+        
+        # Extraemos el número de reseñas
+        try:
+            reviews = driver.find_element(By.ID, 'acrCustomerReviewText').text
+        except Exception as e:
+            reviews = "No disponibles"
 
         # Guardamos los datos extraídos en un diccionario
         data.append({
             'Title': title,
             'Price': price,
             'Rating': rating,
-            'Features': features
+            'Features': features,
+            'Number_of_Reviews': reviews  # Añadimos la columna de reseñas
         })
 
         # Guardamos los datos en un archivo CSV
         with open('output.csv', mode='w', newline='', encoding='utf-8') as file:
-            writer = csv.DictWriter(file, fieldnames=['Title', 'Price', 'Rating', 'Features'])
+            writer = csv.DictWriter(file, fieldnames=['Title', 'Price', 'Rating', 'Features', 'Number_of_Reviews'])
             writer.writeheader()
             writer.writerows(data)
 
@@ -79,7 +85,6 @@ def scrape_data():
 
     finally:
         driver.quit()
-
 
 if __name__ == "__main__":
     scrape_data()
