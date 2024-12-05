@@ -52,12 +52,14 @@ jobs:
         run: |
           pytest
 
-      # Paso 8: Subir el archivo generado como artefacto
-      - name: Upload Data as Artifact
+      # Paso 8: Subir los archivos generados como artefactos
+      - name: Upload Data as Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: scraped-data
-          path: output.csv
+          path: |
+            output.csv
+            product_details.txt
 
       # Paso 9: Verificar estado de git (opcional)
       - name: Verificar estado de git
@@ -65,7 +67,7 @@ jobs:
           git status
           git remote -v
 
-      # Paso 10: Hacer commit del archivo generado al repositorio
+      # Paso 10: Hacer commit de los archivos generados al repositorio
       - name: Push Results to Repository
         if: success()  # Solo ejecuta este paso si los pasos anteriores se completaron exitosamente
         env:
@@ -74,11 +76,15 @@ jobs:
           git config --global user.name 'GitHub Actions'
           git config --global user.email 'actions@github.com'
           git remote set-url origin https://x-access-token:${SCRAPING}@github.com/${{ github.repository }}
-          
-          # Agregar ambos archivos (output.csv y error_screenshot.png)
-          git add output.csv error_screenshot.png
-          git commit -m "Datos extraídos automáticamente"
+
+          # Agregar todos los archivos generados
+          git add output.csv product_details.txt error_screenshot.png
+
+          # Crear un commit más descriptivo
+          git commit -m "Actualización automática de datos extraídos
+
+          - Actualizado output.csv con datos básicos
+          - Agregado product_details.txt con información detallada
+          - Incluida captura de pantalla si hubo errores"
+
           git push origin main
-
-
-
