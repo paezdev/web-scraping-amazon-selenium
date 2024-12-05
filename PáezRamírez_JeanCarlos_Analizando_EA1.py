@@ -13,121 +13,137 @@ import random
 
 def get_random_user_agent():
     user_agents = [
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0",
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.1 Safari/605.1.15",
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 Edg/91.0.864.59"
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0"
     ]
     return random.choice(user_agents)
 
 def scrape_data():
-    # Configuración del navegador con más opciones anti-detección
+    # Configuración del navegador
     chrome_options = Options()
     chrome_options.binary_location = "/usr/bin/google-chrome-stable"
-    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--headless=new")
     chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--disable-blink-features=AutomationControlled")
-    chrome_options.add_argument("--disable-notifications")
     chrome_options.add_argument("--window-size=1920,1080")
+    chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument(f"user-agent={get_random_user_agent()}")
-
-    # Añadir más headers aleatorios
-    chrome_options.add_argument("--accept-language=es-ES,es;q=0.9,en;q=0.8")
+    chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+    chrome_options.add_argument("--disable-extensions")
+    chrome_options.add_argument("--lang=es-ES")
     chrome_options.add_argument("--disable-gpu")
-    chrome_options.add_argument("--ignore-certificate-errors")
-    chrome_options.add_argument("--allow-running-insecure-content")
 
     # Configuraciones experimentales
     chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
     chrome_options.add_experimental_option('useAutomationExtension', False)
+    chrome_options.add_experimental_option("prefs", {
+        "profile.default_content_setting_values.notifications": 2,
+        "credentials_enable_service": False,
+        "profile.password_manager_enabled": False
+    })
 
     service = Service(ChromeDriverManager().install())
     driver = webdriver.Chrome(service=service, options=chrome_options)
 
-    # Modificar más propiedades del navegador para evitar detección
-    driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
-    driver.execute_script("Object.defineProperty(navigator, 'languages', {get: () => ['es-ES', 'es']})")
-
     try:
         print("Iniciando extracción de datos...")
 
-        # Añadir delays más naturales y aleatorios
-        time.sleep(random.uniform(3, 7))
-
-        # URL del producto
         url = 'https://www.amazon.com/-/es/Xiaomi-Smart-Band-Global-Version/dp/B0CD2MP728/'
         driver.get(url)
+        time.sleep(random.uniform(3, 5))
 
-        # Simular comportamiento humano
-        for _ in range(3):
-            driver.execute_script(f"window.scrollTo(0, {random.randint(300, 700)});")
-            time.sleep(random.uniform(1, 3))
-
-        print("Página cargada. Intentando extraer datos...")
-
-        # Verificar si hay CAPTCHA
-        if "robot" in driver.page_source.lower() or "captcha" in driver.page_source.lower():
-            print("CAPTCHA detectado - Esperando más tiempo...")
-            time.sleep(random.uniform(10, 15))
-            driver.refresh()
-            time.sleep(random.uniform(5, 8))
-
-        # Extraer título con múltiples intentos
-        title = "Título no disponible"
-        for _ in range(3):
-            try:
-                title_element = WebDriverWait(driver, 10).until(
-                    EC.presence_of_element_located((By.ID, 'productTitle'))
-                )
-                title = title_element.text.strip()
-                print(f"Título extraído: {title}")
-                break
-            except:
-                time.sleep(random.uniform(2, 4))
-                continue
-
-        # Extraer precio con múltiples intentos
-        price = "Precio no disponible"
-        price_selectors = [
-            (By.CLASS_NAME, 'a-price-whole'),
-            (By.ID, 'priceblock_ourprice'),
-            (By.ID, 'priceblock_dealprice'),
-            (By.CLASS_NAME, 'a-price')
+        # Selectores para el título
+        title_selectors = [
+            (By.ID, 'productTitle'),
+            (By.CSS_SELECTOR, 'h1.a-size-large'),
+            (By.CSS_SELECTOR, 'span#productTitle'),
+            (By.XPATH, "//span[@id='productTitle']")
         ]
 
-        for selector in price_selectors:
+        # Extraer título
+        title = "Título no disponible"
+        for selector_type, selector in title_selectors:
             try:
-                price_element = WebDriverWait(driver, 10).until(
-                    EC.presence_of_element_located(selector)
+                title_element = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((selector_type, selector))
                 )
-                price = price_element.text.strip()
-                print(f"Precio extraído: {price}")
-                break
+                title = title_element.text.strip()
+                if title:
+                    print(f"Título extraído: {title}")
+                    break
             except:
                 continue
+
+        # Selectores para el precio
+        price_selectors = [
+            (By.CSS_SELECTOR, 'span.a-price-whole'),
+            (By.CSS_SELECTOR, 'span.a-offscreen'),
+            (By.CSS_SELECTOR, '#priceblock_ourprice'),
+            (By.CSS_SELECTOR, '#priceblock_dealprice'),
+            (By.CSS_SELECTOR, '.a-price .a-offscreen'),
+            (By.XPATH, "//span[@class='a-price-whole']"),
+            (By.XPATH, "//span[@class='a-offscreen'][contains(text(),'$')]")
+        ]
+
+        # Extraer precio
+        price = "Precio no disponible"
+        for selector_type, selector in price_selectors:
+            try:
+                price_element = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((selector_type, selector))
+                )
+                price = price_element.text.strip().replace('US$', '').replace(',', '').replace('$', '')
+                if price:
+                    print(f"Precio extraído: {price}")
+                    break
+            except:
+                continue
+
+        # Selectores para el rating
+        rating_selectors = [
+            (By.CSS_SELECTOR, 'span.a-icon-alt'),
+            (By.CSS_SELECTOR, '#acrPopover .a-icon-alt'),
+            (By.XPATH, "//span[@class='a-icon-alt'][contains(text(),'de 5')]"),
+            (By.CSS_SELECTOR, 'i.a-icon-star .a-icon-alt')
+        ]
 
         # Extraer rating
         rating = "N/A"
-        try:
-            rating_element = WebDriverWait(driver, 10).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, 'span[class*="a-icon-alt"]'))
-            )
-            rating = rating_element.get_attribute('innerHTML').split(' de ')[0]
-            print(f"Rating extraído: {rating}")
-        except:
-            print("Rating no encontrado")
+        for selector_type, selector in rating_selectors:
+            try:
+                rating_element = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((selector_type, selector))
+                )
+                rating_text = rating_element.get_attribute('innerHTML')
+                rating = rating_text.split(' de ')[0].strip()
+                if rating:
+                    print(f"Rating extraído: {rating}")
+                    break
+            except:
+                continue
+
+        # Selectores para reviews
+        review_selectors = [
+            (By.ID, 'acrCustomerReviewText'),
+            (By.CSS_SELECTOR, '#acrCustomerReviewText'),
+            (By.XPATH, "//span[@id='acrCustomerReviewText']"),
+            (By.CSS_SELECTOR, 'span[data-hook="total-review-count"]')
+        ]
 
         # Extraer número de reviews
         reviews = "0"
-        try:
-            reviews_element = WebDriverWait(driver, 10).until(
-                EC.presence_of_element_located((By.ID, 'acrCustomerReviewText'))
-            )
-            reviews = reviews_element.text.split(' ')[0]
-            print(f"Número de reviews extraído: {reviews}")
-        except:
-            print("Número de reviews no encontrado")
+        for selector_type, selector in review_selectors:
+            try:
+                reviews_element = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((selector_type, selector))
+                )
+                reviews = reviews_element.text.split(' ')[0].replace(',', '').replace('.', '')
+                if reviews:
+                    print(f"Número de reviews extraído: {reviews}")
+                    break
+            except:
+                continue
 
         # Guardar detalles en archivo de texto
         with open('product_details.txt', 'w', encoding='utf-8') as f:
@@ -159,13 +175,5 @@ def scrape_data():
         print("Cerrando el navegador...")
         driver.quit()
 
-def get_random_user_agent():
-    user_agents = [
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0",
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.1 Safari/605.1.15",
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 Edg/91.0.864.59",
-        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36",
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.82 Safari/537.36"
-    ]
-    return random.choice(user_agents)
+if __name__ == "__main__":
+    scrape_data()
