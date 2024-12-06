@@ -55,7 +55,7 @@ def scrape_data():
 
         # Extraemos el rating del producto
         try:
-            rating = driver.find_element(By.CLASS_NAME, 'a-size-base a-color-base').text
+            rating = driver.find_element(By.CLASS_NAME, 'a-icon-alt').text
         except Exception as e:
             rating = "No disponible"
 
