@@ -53,9 +53,10 @@ def scrape_data():
         except Exception as e:
             price = "No disponible"
 
-        # Extraemos el rating del producto
+        # Extraemos el rating del producto usando un XPath que busca la clase y el valor del rating
         try:
-            rating = driver.find_element(By.CLASS_NAME, 'a-icon-alt').text
+            # Aquí se busca la calificación que está en el texto dentro del span de clase 'a-size-base a-color-base'
+            rating = driver.find_element(By.XPATH, '//a[@class="a-popover-trigger a-declarative"]/span[@class="a-size-base a-color-base"]').text
         except Exception as e:
             rating = "No disponible"
 
@@ -108,4 +109,5 @@ def scrape_data():
 
 if __name__ == "__main__":
     scrape_data()
+
 
